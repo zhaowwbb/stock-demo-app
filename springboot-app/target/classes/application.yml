@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/zafin
+    username: dm
+    password: dm
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true  # Makes the SQL readable with line breaks    
+aws:
+  s3:
+    bucket-name: demo-stock-ranking-bucket-2026

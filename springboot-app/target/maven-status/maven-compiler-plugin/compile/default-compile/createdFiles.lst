@@ -1,0 +1,7 @@
+com\demo\stocks\repository\StockRepository.class
+com\demo\stocks\model\StockRanking.class
+com\demo\stocks\model\Stock.class
+com\demo\stocks\StockDemoApplication.class
+com\demo\stocks\controller\StockController.class
+com\demo\stocks\config\AwsConfig.class
+com\demo\stocks\repository\StockRankingRepository.class

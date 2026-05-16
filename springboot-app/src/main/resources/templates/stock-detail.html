@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Stock Detail</title>
+</head>
+<body>
+
+<h1>Stock History</h1>
+
+<table border="1">
+
+<thead>
+<tr>
+    <th>Company</th>
+    <th>Price</th>
+    <th>Score</th>
+    <th>Time</th>
+</tr>
+</thead>
+
+<tbody>
+<tr th:each="stock : ${history}">
+    <td th:text="${stock.companyName}"></td>
+    <td th:text="${stock.price}"></td>
+    <td th:text="${stock.score}"></td>
+    <td th:text="${stock.updatedTime}"></td>
+</tr>
+</tbody>
+
+</table>
+
+</body>
+</html>
