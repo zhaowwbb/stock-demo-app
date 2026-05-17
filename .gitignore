@@ -1,3 +1,2 @@
-# Maven
-**/target/
-**/*.class
+target/
+*.class

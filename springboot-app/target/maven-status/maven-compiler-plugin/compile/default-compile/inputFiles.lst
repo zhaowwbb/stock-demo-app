@@ -1,7 +1,0 @@
-D:\work_dir\stock-demo-app\springboot-app\src\main\java\com\demo\stocks\config\AwsConfig.java
-D:\work_dir\stock-demo-app\springboot-app\src\main\java\com\demo\stocks\controller\StockController.java
-D:\work_dir\stock-demo-app\springboot-app\src\main\java\com\demo\stocks\model\Stock.java
-D:\work_dir\stock-demo-app\springboot-app\src\main\java\com\demo\stocks\model\StockRanking.java
-D:\work_dir\stock-demo-app\springboot-app\src\main\java\com\demo\stocks\repository\StockRankingRepository.java
-D:\work_dir\stock-demo-app\springboot-app\src\main\java\com\demo\stocks\repository\StockRepository.java
-D:\work_dir\stock-demo-app\springboot-app\src\main\java\com\demo\stocks\StockDemoApplication.java
