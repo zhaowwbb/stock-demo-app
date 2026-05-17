@@ -59,6 +59,7 @@ public class StockController {
     @GetMapping("/api/stocks/top10")
     @ResponseBody
     public List<Map<String, Object>> getTop10FromS3() throws Exception {
+        log.info("Test S3 bucket, {}", bucketName);
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
                 .key("top10.json")

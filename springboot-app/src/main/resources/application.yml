@@ -1,6 +1,7 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/zafin
+    url: jdbc:postgresql://database-1.c3m0mywwuswl.us-east-2.rds.amazonaws.com:5432/zafin
+        # url: jdbc:postgresql://localhost:5432/zafin
     username: dm
     password: dm
   jpa:
@@ -9,5 +10,6 @@ spring:
       hibernate:
         format_sql: true  # Makes the SQL readable with line breaks    
 aws:
+  region: us-east-2
   s3:
     bucket-name: demo-stock-ranking-bucket-2026
