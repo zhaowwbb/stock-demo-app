@@ -1,0 +1,5 @@
+yfinance
+pg8000
+pandas
+financedatabase
+pytickersymbols
