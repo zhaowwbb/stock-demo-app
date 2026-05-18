@@ -2,12 +2,17 @@ package com.demo.stocks.controller;
 
 import com.demo.stocks.model.Stock;
 import com.demo.stocks.model.StockRanking;
+import com.demo.stocks.model.TopRecAbsoluteIncrease;
+import com.demo.stocks.model.TopRecPercentageIncrease;
 import com.demo.stocks.repository.StockRankingRepository;
 import com.demo.stocks.repository.StockRepository;
+import com.demo.stocks.repository.TopRecAbsoluteIncreaseRepository;
+import com.demo.stocks.repository.TopRecPercentageIncreaseRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -17,6 +22,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +37,12 @@ public class StockController {
     private final StockRankingRepository stockRankingRepository;
     private final S3Client s3Client;
     private final ObjectMapper objectMapper;
+
+    @Autowired
+    private TopRecAbsoluteIncreaseRepository absoluteRepository;
+
+    @Autowired
+    private TopRecPercentageIncreaseRepository percentageRepository;
 
     @Value("${aws.s3.bucket-name}")
     private String bucketName;
@@ -102,5 +114,29 @@ public class StockController {
         model.addAttribute("history", history);
         // model.addAttribute("symbol", symbol);
         return "stock-detail";
+    }
+
+    @GetMapping("/dashboard")
+    public String getDashboard(Model model) {
+        // In production, your Lambda script saves records under the execution date.
+        // We will default to looking for today's generated data rows.
+        LocalDate today = LocalDate.now();
+
+        List<TopRecAbsoluteIncrease> absoluteList = absoluteRepository.findByUpdatedDateOrderByRankAsc(today);
+        List<TopRecPercentageIncrease> percentageList = percentageRepository.findByUpdatedDateOrderByRankAsc(today);
+
+        // Fallback: If your Lambda hasn't run today yet, fetch the most recent data
+        // point available
+        if (absoluteList.isEmpty()) {
+            // Note: If today is empty, you could write a fallback custom query to find the
+            // max date.
+            // For this UI template, we send the lists directly to the view layout model.
+        }
+
+        model.addAttribute("absoluteRecommendations", absoluteList);
+        model.addAttribute("percentageRecommendations", percentageList);
+        model.addAttribute("currentDate", today);
+
+        return "dashboard"; // Maps to src/main/resources/templates/dashboard.html
     }
 }

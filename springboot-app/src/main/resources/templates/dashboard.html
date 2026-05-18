@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Recommendation Engine</title>
+    <!-- Tailwind CSS Engine CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans min-h-screen text-gray-800">
+
+    <!-- Header Panel Section -->
+    <header class="bg-slate-900 text-white shadow-md py-6 px-8 mb-10">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                    Stock Analysis Dashboard
+                </h1>
+                <p class="text-slate-400 text-sm mt-1">Algorithmic Lambda-driven trading insights and picks</p>
+            </div>
+            <div class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-center shadow-inner">
+                <span class="text-xs font-semibold text-slate-400 block uppercase tracking-wider">Report Generation Date</span>
+                <span class="text-emerald-400 font-mono font-medium text-base" th:text="${currentDate}">2026-05-18</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Layout Splitter Grid -->
+    <main class="max-w-7xl mx-auto px-4 md:px-8 pb-16">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <!-- PANEL 1: ABSOLUTE VALUE INCREASES -->
+            <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-slate-50 to-white">
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <span class="p-2 bg-emerald-50 text-emerald-600 rounded-lg text-sm font-mono font-black">$$</span>
+                        Top 10 Absolute Price Velocity
+                    </h2>
+                    <p class="text-gray-500 text-xs mt-1">Ranked by maximum milestone target high minus earliest chronological low price point.</p>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-gray-100">
+                                <th class="py-3 px-4 text-center w-16">Rank</th>
+                                <th class="py-3 px-4">Symbol</th>
+                                <th class="py-3 px-4 text-right">Price High</th>
+                                <th class="py-3 px-4 text-right">Price Low</th>
+                                <th class="py-3 px-4 text-right">Net Increase</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 text-sm">
+                            <!-- Empty State handling -->
+                            <tr th:if="${#lists.isEmpty(absoluteRecommendations)}">
+                                <td colspan="5" class="py-10 text-center text-gray-400 italic bg-gray-50">
+                                    No data points registered for this calendar cycle yet.
+                                </td>
+                            </tr>
+                            <!-- Data Row Binding Loop -->
+                            <tr th:each="stock : ${absoluteRecommendations}" class="hover:bg-slate-50/70 transition duration-150 group">
+                                <td class="py-4 px-4 text-center">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-md font-bold text-xs"
+                                          th:classappend="${stock.rank == 1} ? 'bg-amber-100 text-amber-800' : (${stock.rank == 2} ? 'bg-slate-200 text-slate-700' : (${stock.rank == 3} ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-600'))"
+                                          th:text="${stock.rank}">1</span>
+                                </td>
+                                <td class="py-4 px-4 font-bold text-slate-900 group-hover:text-emerald-600 transition" th:text="${stock.symbol}">AAPL</td>
+                                <td class="py-4 px-4 text-right font-mono text-gray-600" th:text="${'$' + #numbers.formatDecimal(stock.priceHigh, 1, 2)}">$185.20</td>
+                                <td class="py-4 px-4 text-right font-mono text-gray-600" th:text="${'$' + #numbers.formatDecimal(stock.priceLow, 1, 2)}">$172.10</td>
+                                <td class="py-4 px-4 text-right font-semibold font-mono text-emerald-600" th:text="${'+$' + #numbers.formatDecimal(stock.priceIncreaseAmt, 1, 2)}">+$13.10</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- PANEL 2: PERCENTAGE BASED GROWTH INCREASES -->
+            <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-slate-50 to-white">
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <span class="p-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-mono font-black">%</span>
+                        Top 10 Percentage Explosiveness
+                    </h2>
+                    <p class="text-gray-500 text-xs mt-1">Ranked by relative price variance shift scaling equations adjusted to market entry footprint.</p>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-gray-100">
+                                <th class="py-3 px-4 text-center w-16">Rank</th>
+                                <th class="py-3 px-4">Symbol</th>
+                                <th class="py-3 px-4 text-right">Price High</th>
+                                <th class="py-3 px-4 text-right">Price Low</th>
+                                <th class="py-3 px-4 text-right">ROI Shift</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 text-sm">
+                            <!-- Empty State handling -->
+                            <tr th:if="${#lists.isEmpty(percentageRecommendations)}">
+                                <td colspan="5" class="py-10 text-center text-gray-400 italic bg-gray-50">
+                                    No data points registered for this calendar cycle yet.
+                                </td>
+                            </tr>
+                            <!-- Data Row Binding Loop -->
+                            <tr th:each="stock : ${percentageRecommendations}" class="hover:bg-slate-50/70 transition duration-150 group">
+                                <td class="py-4 px-4 text-center">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-md font-bold text-xs"
+                                          th:classappend="${stock.rank == 1} ? 'bg-amber-100 text-amber-800' : (${stock.rank == 2} ? 'bg-slate-200 text-slate-700' : (${stock.rank == 3} ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-600'))"
+                                          th:text="${stock.rank}">1</span>
+                                </td>
+                                <td class="py-4 px-4 font-bold text-slate-900 group-hover:text-blue-600 transition" th:text="${stock.symbol}">NVDA</td>
+                                <td class="py-4 px-4 text-right font-mono text-gray-600" th:text="${'$' + #numbers.formatDecimal(stock.priceHigh, 1, 2)}">$495.00</td>
+                                <td class="py-4 px-4 text-right font-mono text-gray-600" th:text="${'$' + #numbers.formatDecimal(stock.priceLow, 1, 2)}">$420.50</td>
+                                <td class="py-4 px-4 text-right font-semibold font-mono text-emerald-600 bg-emerald-50/30 group-hover:bg-emerald-50 transition" 
+                                    th:text="${#numbers.formatDecimal(stock.priceIncreasePct, 1, 2) + '%'}">17.72%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+</body>
+</html>
