@@ -11,4 +11,4 @@ copy lambda_function.py .\package\
 cd package
 
 # Compress all contents into a deployment ready .zip file on your desktop
-Compress-Archive -Path * -DestinationPath "D:\work_dir\stock-demo-app\lambda-ranking-python\stock_ranking_lambda.zip" -Force
+Compress-Archive -Path * -DestinationPath "D:\temp\20260518\stock_ranking_lambda.zip" -Force

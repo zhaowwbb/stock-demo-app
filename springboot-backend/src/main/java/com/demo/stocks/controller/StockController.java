@@ -122,8 +122,12 @@ public class StockController {
         // We will default to looking for today's generated data rows.
         LocalDate today = LocalDate.now();
 
-        List<TopRecAbsoluteIncrease> absoluteList = absoluteRepository.findByUpdatedDateOrderByRankAsc(today);
-        List<TopRecPercentageIncrease> percentageList = percentageRepository.findByUpdatedDateOrderByRankAsc(today);
+        // List<TopRecAbsoluteIncrease> absoluteList = absoluteRepository.findByUpdatedDateOrderByRankAsc(today);
+        // List<TopRecPercentageIncrease> percentageList = percentageRepository.findByUpdatedDateOrderByRankAsc(today);
+
+        List<TopRecAbsoluteIncrease> absoluteList = absoluteRepository.findAll();
+        List<TopRecPercentageIncrease> percentageList = percentageRepository.findAll();
+
 
         // Fallback: If your Lambda hasn't run today yet, fetch the most recent data
         // point available
@@ -139,4 +143,50 @@ public class StockController {
 
         return "dashboard"; // Maps to src/main/resources/templates/dashboard.html
     }
+
+// ==========================================
+    // REACT JS INTERACTIVE REST API ENDPOINTS
+    // ==========================================
+
+    @GetMapping("/api/stocks/percentage")
+    @ResponseBody
+    public ResponseEntity<List<TopRecPercentageIncrease>> getTopPercentageGains() {
+        log.info("REST request received for top percentage increase stocks");
+        try {
+            LocalDate today = LocalDate.now();
+            List<TopRecPercentageIncrease> list = percentageRepository.findByUpdatedDateOrderByRankAsc(today);
+            
+            // Fallback: If Lambda pipeline hasn't loaded data for today yet, fetch available historical entries
+            if (list.isEmpty()) {
+                log.warn("No percentage data found for snapshot date [{}]. Cascading to historical table scan.", today);
+                list = percentageRepository.findAll();
+            }
+            
+            return ResponseEntity.ok(list);
+        } catch (Exception e) {
+            log.error("Failed to compile percentage analytics data matrix:", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/api/stocks/absolute")
+    @ResponseBody
+    public ResponseEntity<List<TopRecAbsoluteIncrease>> getTopAbsoluteGains() {
+        log.info("REST request received for top absolute value increase stocks");
+        try {
+            LocalDate today = LocalDate.now();
+            List<TopRecAbsoluteIncrease> list = absoluteRepository.findByUpdatedDateOrderByRankAsc(today);
+            
+            // Fallback: If Lambda pipeline hasn't loaded data for today yet, fetch available historical entries
+            if (list.isEmpty()) {
+                log.warn("No absolute data found for snapshot date [{}]. Cascading to historical table scan.", today);
+                list = absoluteRepository.findAll();
+            }
+            
+            return ResponseEntity.ok(list);
+        } catch (Exception e) {
+            log.error("Failed to compile absolute analytics data matrix:", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }    
 }
