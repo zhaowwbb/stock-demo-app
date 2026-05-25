@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
+@CrossOrigin(origins = "*") // For development. Replace "*" with your production React URL later.
 @RequestMapping("/")
 public class StockController {
     // 1. Define the logger instance for this class

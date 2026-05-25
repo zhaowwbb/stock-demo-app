@@ -1,7 +1,7 @@
 spring:
   datasource:
-    #url: jdbc:postgresql://database-1.c3m0mywwuswl.us-east-2.rds.amazonaws.com:5432/zafin
-    url: jdbc:postgresql://localhost:5432/zafin
+    url: jdbc:postgresql://database-1.c3m0mywwuswl.us-east-2.rds.amazonaws.com:5432/zafin
+    #url: jdbc:postgresql://localhost:5432/zafin
     username: dm
     password: dm
   jpa:

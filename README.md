@@ -10,5 +10,6 @@ Demo AWS application including:
 
 - database/
 - lambda-ranking-go/
-- springboot-app/
+- springboot-backend/
+- react-frontend/
 - terraform/
