@@ -7,10 +7,14 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Read the environment variable based on your build tool
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'; 
+  // Note: For Create React App use: process.env.REACT_APP_API_BASE_URL  
+
   const fetchData = async (currentView) => {
     setLoading(true);
     setError(null);
-    const endpoint = currentView === 'percentage' ? '/api/stocks/percentage' : '/api/stocks/absolute';
+    const endpoint = currentView === 'percentage' ? '${API_BASE_URL}/api/stocks/percentage' : '${API_BASE_URL}/api/stocks/absolute';
     
     try {
       const response = await fetch(endpoint);
