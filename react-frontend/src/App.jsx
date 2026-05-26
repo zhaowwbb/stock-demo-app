@@ -14,8 +14,13 @@ export default function App() {
   const fetchData = async (currentView) => {
     setLoading(true);
     setError(null);
-    const endpoint = currentView === 'percentage' ? '${API_BASE_URL}/api/stocks/percentage' : '${API_BASE_URL}/api/stocks/absolute';
-    
+    // const endpoint = currentView === 'percentage' ? '${API_BASE_URL}/api/stocks/percentage' : '${API_BASE_URL}/api/stocks/absolute';
+
+// FIX: Changed single quotes to backticks (``) so the variable is evaluated
+    const endpoint = currentView === 'percentage' 
+      ? `${API_BASE_URL}/api/stocks/percentage` 
+      : `${API_BASE_URL}/api/stocks/absolute`;    
+
     try {
       const response = await fetch(endpoint);
       if (!response.ok) {
