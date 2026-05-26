@@ -131,7 +131,7 @@ export default function App() {
             {data.length > 0 && (
               <div className="flex items-center text-xs text-slate-400 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 self-start font-mono">
                 <Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-500" />
-                Updated: {data[0].updated_date}
+                Updated: {data[0].updatedDate}
               </div>
             )}
           </div>
@@ -183,20 +183,20 @@ export default function App() {
                         {view === 'percentage' ? (
                           <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                             <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
-                            +{Number(item.price_increase_pct).toFixed(2)}%
+                            +{Number(item.priceIncreasePct).toFixed(2)}%
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
                             <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
-                            +${Number(item.price_increase_amt).toFixed(2)}
+                            +${Number(item.priceIncreaseAmt).toFixed(2)}
                           </span>
                         )}
                       </td>
                       <td className="py-4 px-6 text-right font-mono text-sm font-medium text-slate-300">
-                        ${Number(item.price_high).toFixed(2)}
+                        ${Number(item.priceHigh).toFixed(2)}
                       </td>
                       <td className="py-4 px-6 text-right font-mono text-sm font-medium text-slate-400">
-                        ${Number(item.price_low).toFixed(2)}
+                        ${Number(item.priceLow).toFixed(2)}
                       </td>
                       <td className="py-4 px-6 text-right font-mono text-sm text-slate-400 group-hover:text-slate-300">
                         {Number(item.volume).toLocaleString()}
@@ -217,19 +217,19 @@ function getMockData(type) {
   const today = new Date().toISOString().split('T')[0];
   if (type === 'percentage') {
     return [
-      { rank: 1, updated_date: today, symbol: 'NVDA', price_high: 945.50, price_low: 912.00, volume: 42500100, price_increase_pct: 14.55 },
-      { rank: 2, updated_date: today, symbol: 'AMD', price_high: 182.40, price_low: 165.10, volume: 29400200, price_increase_pct: 11.20 },
-      { rank: 3, updated_date: today, symbol: 'PLTR', price_high: 28.15, price_low: 24.80, volume: 68100900, price_increase_pct: 10.85 },
-      { rank: 4, updated_date: today, symbol: 'HOLO', price_high: 2.85, price_low: 2.20, volume: 105400000, price_increase_pct: 9.40 },
-      { rank: 5, updated_date: today, symbol: 'BABA', price_high: 88.90, price_low: 81.20, volume: 18450000, price_increase_pct: 8.75 }
+      { rank: 1, updatedDate: today, symbol: 'NVDA', priceHigh: 945.50, priceLow: 912.00, volume: 42500100, priceIncreasePct: 14.55 },
+      { rank: 2, updatedDate: today, symbol: 'AMD', priceHigh: 182.40, priceLow: 165.10, volume: 29400200, priceIncreasePct: 11.20 },
+      { rank: 3, updatedDate: today, symbol: 'PLTR', priceHigh: 28.15, priceLow: 24.80, volume: 68100900, priceIncreasePct: 10.85 },
+      { rank: 4, updatedDate: today, symbol: 'HOLO', priceHigh: 2.85, priceLow: 2.20, volume: 105400000, priceIncreasePct: 9.40 },
+      { rank: 5, updatedDate: today, symbol: 'BABA', priceHigh: 88.90, priceLow: 81.20, volume: 18450000, priceIncreasePct: 8.75 }
     ];
   } else {
     return [
-      { rank: 1, updated_date: today, symbol: 'AVGO', price_high: 1420.00, price_low: 1350.00, volume: 3100400, price_increase_amt: 65.50 },
-      { rank: 2, updated_date: today, symbol: 'REGN', price_high: 980.50, price_low: 932.10, volume: 850200, price_increase_amt: 45.15 },
-      { rank: 3, updated_date: today, symbol: 'CMG', price_high: 2910.00, price_low: 2868.00, volume: 1200500, price_increase_amt: 42.00 },
-      { rank: 4, updated_date: today, symbol: 'MSFT', price_high: 432.60, price_low: 415.00, volume: 22400100, price_increase_amt: 17.60 },
-      { rank: 5, updated_date: today, symbol: 'META', price_high: 485.20, price_low: 470.15, volume: 15800400, price_increase_amt: 15.05 }
+      { rank: 1, updatedDate: today, symbol: 'AVGO', priceHigh: 1420.00, priceLow: 1350.00, volume: 3100400, priceIncreaseAmt: 65.50 },
+      { rank: 2, updatedDate: today, symbol: 'REGN', priceHigh: 980.50, priceLow: 932.10, volume: 850200, priceIncreaseAmt: 45.15 },
+      { rank: 3, updatedDate: today, symbol: 'CMG', priceHigh: 2910.00, priceLow: 2868.00, volume: 1200500, priceIncreaseAmt: 42.00 },
+      { rank: 4, updatedDate: today, symbol: 'MSFT', priceHigh: 432.60, priceLow: 415.00, volume: 22400100, priceIncreaseAmt: 17.60 },
+      { rank: 5, updatedDate: today, symbol: 'META', priceHigh: 485.20, priceLow: 470.15, volume: 15800400, priceIncreaseAmt: 15.05 }
     ];
   }
 }
