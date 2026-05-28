@@ -1,0 +1,24 @@
+{
+  "folders": [
+    {
+      "name": "SpringBoot (Java)",
+      "path": "springboot-backend"
+    },
+    {
+      "name": "Lambda (Python)",
+      "path": "lambda-ranking-python"
+    },   
+    {
+      "name": "Lambda (Go)",
+      "path": "lambda-ranking-go"
+    },       
+    {
+      "name": "Frontend (React)",
+      "path": "lambda-ranking-go"
+    }
+  ],
+  "settings": {
+    // Global settings for the entire workspace can go here
+    "editor.rumatOnSave": true 
+  }
+}
