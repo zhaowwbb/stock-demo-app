@@ -9,7 +9,7 @@ data "aws_ami" "amazon_linux_2023" {
 
 resource "aws_instance" "spring_boot" {
   ami                    = data.aws_ami.amazon_linux_2023.id
-  instance_type          = "t2.micro"       # Safe fallback for standard Free Tier across almost all regions
+  instance_type          = "t3.micro"       # Safe fallback for standard Free Tier across almost all regions
   subnet_id              = var.public_subnet_ids[0]
   vpc_security_group_ids = [var.security_group_id]
 

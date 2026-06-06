@@ -19,7 +19,7 @@ resource "aws_db_instance" "postgres" {
   identifier             = "${var.environment}-postgres"
   allocated_storage      = 20               # 20 GB is free-tier eligible (up to 20GB allocated)
   engine                 = "postgres"
-  engine_version         = "15.4"
+  engine_version         = "15"
   instance_class         = "db.t3.micro"    # CHANGED: db.t4g.micro replaced with Free-Tier eligible t3.micro
   db_name                = "appdb"
   username               = "cloud_admin"
