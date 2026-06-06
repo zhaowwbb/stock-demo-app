@@ -1,3 +1,15 @@
 variable "aws_region" {
-  default = "us-east-1"
+  type    = string
+  default = "us-east-2"
+}
+
+variable "environment" {
+  type    = string
+  default = "dev"
+}
+
+variable "db_password" {
+  type        = string
+  description = "Master password for PostgreSQL database"
+  sensitive   = true
 }
