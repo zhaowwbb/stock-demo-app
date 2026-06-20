@@ -10,6 +10,8 @@ import com.demo.stocks.repository.TopRecAbsoluteIncreaseRepository;
 import com.demo.stocks.repository.TopRecPercentageIncreaseRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.demo.stocks.service.StockPriceService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.io.InputStream;
 import java.time.LocalDate;
@@ -38,6 +42,10 @@ public class StockController {
     private final StockRankingRepository stockRankingRepository;
     private final S3Client s3Client;
     private final ObjectMapper objectMapper;
+    private final StockPriceService stockPriceService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Autowired
     private TopRecAbsoluteIncreaseRepository absoluteRepository;
@@ -49,11 +57,12 @@ public class StockController {
     private String bucketName;
 
     public StockController(StockRepository stockRepository, S3Client s3Client,
-            StockRankingRepository stockRankingRepository) {
+            StockRankingRepository stockRankingRepository, StockPriceService stockPriceService) {
         this.stockRepository = stockRepository;
         this.stockRankingRepository = stockRankingRepository;
         this.s3Client = s3Client;
         this.objectMapper = new ObjectMapper();
+        this.stockPriceService = stockPriceService;
     }
 
     @GetMapping("/api/stocks/dbtop10")
@@ -123,12 +132,13 @@ public class StockController {
         // We will default to looking for today's generated data rows.
         LocalDate today = LocalDate.now();
 
-        // List<TopRecAbsoluteIncrease> absoluteList = absoluteRepository.findByUpdatedDateOrderByRankAsc(today);
-        // List<TopRecPercentageIncrease> percentageList = percentageRepository.findByUpdatedDateOrderByRankAsc(today);
+        // List<TopRecAbsoluteIncrease> absoluteList =
+        // absoluteRepository.findByUpdatedDateOrderByRankAsc(today);
+        // List<TopRecPercentageIncrease> percentageList =
+        // percentageRepository.findByUpdatedDateOrderByRankAsc(today);
 
         List<TopRecAbsoluteIncrease> absoluteList = absoluteRepository.findAll();
         List<TopRecPercentageIncrease> percentageList = percentageRepository.findAll();
-
 
         // Fallback: If your Lambda hasn't run today yet, fetch the most recent data
         // point available
@@ -145,24 +155,75 @@ public class StockController {
         return "dashboard"; // Maps to src/main/resources/templates/dashboard.html
     }
 
-// ==========================================
+    // ==========================================
     // REACT JS INTERACTIVE REST API ENDPOINTS
     // ==========================================
+
+    public int calculateAndSaveTopPercentageIncreases() throws Exception {
+        // 1. Clear old data for today to prevent Unique Constraint violations if re-run
+        entityManager.createNativeQuery("DELETE FROM top_rec_absolute_increase WHERE updated_date = CURRENT_DATE")
+                .executeUpdate();
+
+        String insertAbsoluteSql = "INSERT INTO top_rec_absolute_increase (rank, updated_date, symbol, price_high, price_low, volume, price_increase_amt) "
+                +
+                "SELECT " +
+                "  DENSE_RANK() OVER (ORDER BY (close - open) DESC) as rank, " +
+                "  CURRENT_DATE, symbol, high, low, volume, (close - open) as price_increase_amt " +
+                "FROM stock_price " +
+                "WHERE DATE(updated_date) = CURRENT_DATE " +
+                "ORDER BY price_increase_amt DESC " +
+                "LIMIT 10";
+
+        // Execute batch insertion calculations
+        int absInserted = entityManager.createNativeQuery(insertAbsoluteSql).executeUpdate();
+
+        System.out.println(String.format(
+                "Rankings updated successfully for today. Inserted %d percentage records.",
+                absInserted));
+
+        return absInserted;
+    }
+
+    public int calculateAndSaveTopAbsoluteIncreases() throws Exception {
+        entityManager.createNativeQuery("DELETE FROM top_rec_percentage_increase WHERE updated_date = CURRENT_DATE")
+                .executeUpdate();
+        String insertPercentageSql = "INSERT INTO top_rec_percentage_increase (rank, updated_date, symbol, price_high, price_low, volume, price_increase_pct) "
+                +
+                "SELECT " +
+                "  DENSE_RANK() OVER (ORDER BY (CASE WHEN open = 0 THEN 0 ELSE ((close - open) / open) * 100 END) DESC) as rank, "
+                +
+                "  CURRENT_DATE, symbol, high, low, volume, " +
+                "  ROUND((CASE WHEN open = 0 THEN 0 ELSE ((close - open) / open) * 100 END)::numeric, 2) as price_increase_pct "
+                +
+                "FROM stock_price " +
+                "WHERE DATE(updated_date) = CURRENT_DATE " +
+                "ORDER BY price_increase_pct DESC " +
+                "LIMIT 10";
+
+        int pctInserted = entityManager.createNativeQuery(insertPercentageSql).executeUpdate();
+
+        System.out.println(String.format(
+                "Rankings updated successfully for today. Inserted %d absolute records.",
+                pctInserted));
+        return pctInserted;
+    }
 
     @GetMapping("/api/stocks/percentage")
     @ResponseBody
     public ResponseEntity<List<TopRecPercentageIncrease>> getTopPercentageGains() {
         log.info("REST request received for top percentage increase stocks");
         try {
+            calculateAndSaveTopPercentageIncreases();
             LocalDate today = LocalDate.now();
             List<TopRecPercentageIncrease> list = percentageRepository.findByUpdatedDateOrderByRankAsc(today);
-            
-            // Fallback: If Lambda pipeline hasn't loaded data for today yet, fetch available historical entries
+
+            // Fallback: If Lambda pipeline hasn't loaded data for today yet, fetch
+            // available historical entries
             if (list.isEmpty()) {
                 log.warn("No percentage data found for snapshot date [{}]. Cascading to historical table scan.", today);
                 list = percentageRepository.findAll();
             }
-            
+
             return ResponseEntity.ok(list);
         } catch (Exception e) {
             log.error("Failed to compile percentage analytics data matrix:", e);
@@ -175,19 +236,41 @@ public class StockController {
     public ResponseEntity<List<TopRecAbsoluteIncrease>> getTopAbsoluteGains() {
         log.info("REST request received for top absolute value increase stocks");
         try {
+            calculateAndSaveTopAbsoluteIncreases();
             LocalDate today = LocalDate.now();
             List<TopRecAbsoluteIncrease> list = absoluteRepository.findByUpdatedDateOrderByRankAsc(today);
-            
-            // Fallback: If Lambda pipeline hasn't loaded data for today yet, fetch available historical entries
+
+            // Fallback: If Lambda pipeline hasn't loaded data for today yet, fetch
+            // available historical entries
             if (list.isEmpty()) {
                 log.warn("No absolute data found for snapshot date [{}]. Cascading to historical table scan.", today);
                 list = absoluteRepository.findAll();
             }
-            
+
             return ResponseEntity.ok(list);
         } catch (Exception e) {
             log.error("Failed to compile absolute analytics data matrix:", e);
             return ResponseEntity.internalServerError().build();
         }
-    }    
+    }
+
+    @GetMapping("/api/stocks/sync-prices")
+    public ResponseEntity<String> syncStockPrices() {
+        // Step 1: Query stock_history table to get all unique symbols
+        @SuppressWarnings("unchecked")
+        List<String> symbols = entityManager
+                .createNativeQuery("SELECT DISTINCT symbol FROM stock_history")
+                .getResultList();
+
+        if (symbols.isEmpty()) {
+            return ResponseEntity.ok("No symbols found in stock_history table to sync.");
+        }
+
+        // Step 2: Trigger Async/Background operation so HTTP request doesn't timeout
+        new Thread(() -> stockPriceService.fetchAndBatchSave(symbols)).start();
+
+        return ResponseEntity.accepted()
+                .body("Sync started for " + symbols.size() + " symbols. Processing batches of 50...");
+    }
+
 }

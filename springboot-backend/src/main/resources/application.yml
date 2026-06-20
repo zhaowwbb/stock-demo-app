@@ -8,9 +8,18 @@ spring:
     show-sql: true
     properties:
       hibernate:
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+        generate_statistics: true      
         dialect: org.hibernate.dialect.PostgreSQLDialect      
         format_sql: true  # Makes the SQL readable with line breaks    
 aws:
   region: us-east-2
   s3:
     bucket-name: demo-stock-ranking-bucket-2026
+finnhub:
+  api:
+    key: d8qrd6pr01quatd8ohu0d8qrd6pr01quatd8ohug      
+    url: https://finnhub.io/api/v1/quote    
