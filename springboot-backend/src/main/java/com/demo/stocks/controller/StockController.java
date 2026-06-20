@@ -24,6 +24,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.time.LocalDate;
@@ -170,7 +171,7 @@ public class StockController {
                 "  DENSE_RANK() OVER (ORDER BY (close - open) DESC) as rank, " +
                 "  CURRENT_DATE, symbol, high, low, volume, (close - open) as price_increase_amt " +
                 "FROM stock_price " +
-                "WHERE DATE(updated_date) = CURRENT_DATE " +
+                "WHERE    OPEN > 0 and CLOSE > 0 " +
                 "ORDER BY price_increase_amt DESC " +
                 "LIMIT 10";
 
@@ -185,18 +186,18 @@ public class StockController {
     }
 
     public int calculateAndSaveTopAbsoluteIncreases() throws Exception {
-        entityManager.createNativeQuery("DELETE FROM top_rec_percentage_increase WHERE updated_date = CURRENT_DATE")
+        entityManager.createNativeQuery("DELETE FROM dm.top_rec_percentage_increase WHERE updated_date = CURRENT_DATE")
                 .executeUpdate();
         String insertPercentageSql = "INSERT INTO top_rec_percentage_increase (rank, updated_date, symbol, price_high, price_low, volume, price_increase_pct) "
                 +
                 "SELECT " +
                 "  DENSE_RANK() OVER (ORDER BY (CASE WHEN open = 0 THEN 0 ELSE ((close - open) / open) * 100 END) DESC) as rank, "
                 +
-                "  CURRENT_DATE, symbol, high, low, volume, " +
+                "  CURRENT_DATE, symbol, ROUND(high::numeric, 4), ROUND(low::numeric, 4), volume, " +
                 "  ROUND((CASE WHEN open = 0 THEN 0 ELSE ((close - open) / open) * 100 END)::numeric, 2) as price_increase_pct "
                 +
                 "FROM stock_price " +
-                "WHERE DATE(updated_date) = CURRENT_DATE " +
+                "WHERE    OPEN > 0 and CLOSE > 0 " +
                 "ORDER BY price_increase_pct DESC " +
                 "LIMIT 10";
 
@@ -209,6 +210,7 @@ public class StockController {
     }
 
     @GetMapping("/api/stocks/percentage")
+    @Transactional
     @ResponseBody
     public ResponseEntity<List<TopRecPercentageIncrease>> getTopPercentageGains() {
         log.info("REST request received for top percentage increase stocks");
@@ -232,6 +234,7 @@ public class StockController {
     }
 
     @GetMapping("/api/stocks/absolute")
+    @Transactional
     @ResponseBody
     public ResponseEntity<List<TopRecAbsoluteIncrease>> getTopAbsoluteGains() {
         log.info("REST request received for top absolute value increase stocks");
