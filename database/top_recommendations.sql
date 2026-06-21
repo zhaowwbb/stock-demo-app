@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS top_rec_percentage_increase (
     price_high NUMERIC(12, 4) NOT NULL,
     price_low NUMERIC(12, 4) NOT NULL,
     volume BIGINT NOT NULL,
-    price_increase_pct NUMERIC(8, 4) NOT NULL, -- The percentage increase (e.g., 12.5500 for 12.55%)
+    price_increase_pct NUMERIC(12, 4) NOT NULL, -- The percentage increase (e.g., 12.5500 for 12.55%)
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     
     -- Primary Key ensures a clean ranking structure per day

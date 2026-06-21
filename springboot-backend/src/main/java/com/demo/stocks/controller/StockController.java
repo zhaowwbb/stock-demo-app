@@ -1,5 +1,6 @@
 package com.demo.stocks.controller;
 
+import com.demo.stocks.StockDemoApplication;
 import com.demo.stocks.model.Stock;
 import com.demo.stocks.model.StockRanking;
 import com.demo.stocks.model.TopRecAbsoluteIncrease;
@@ -37,7 +38,10 @@ import java.util.Map;
 @RequestMapping("/")
 public class StockController {
     // 1. Define the logger instance for this class
-    private static final Logger log = LoggerFactory.getLogger(StockController.class);
+    // private static final java.util.logging.Logger log = LoggerFactory.getLogger(StockController.class);
+
+    private static final Logger log =
+            LoggerFactory.getLogger(StockController.class);    
 
     private final StockRepository stockRepository;
     private final StockRankingRepository stockRankingRepository;
@@ -178,7 +182,7 @@ public class StockController {
         // Execute batch insertion calculations
         int absInserted = entityManager.createNativeQuery(insertAbsoluteSql).executeUpdate();
 
-        System.out.println(String.format(
+        log.info(String.format(
                 "Rankings updated successfully for today. Inserted %d percentage records.",
                 absInserted));
 
@@ -203,7 +207,7 @@ public class StockController {
 
         int pctInserted = entityManager.createNativeQuery(insertPercentageSql).executeUpdate();
 
-        System.out.println(String.format(
+        log.info(String.format(
                 "Rankings updated successfully for today. Inserted %d absolute records.",
                 pctInserted));
         return pctInserted;
@@ -264,6 +268,7 @@ public class StockController {
         List<String> symbols = entityManager
                 .createNativeQuery("SELECT DISTINCT symbol FROM stock_history")
                 .getResultList();
+        log.info("symbols to be processed: " + symbols.size());
 
         if (symbols.isEmpty()) {
             return ResponseEntity.ok("No symbols found in stock_history table to sync.");

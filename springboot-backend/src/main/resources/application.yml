@@ -1,4 +1,6 @@
 spring:
+  main:
+    log-startup-info: true
   datasource:
     url: jdbc:postgresql://database-1.c3m0mywwuswl.us-east-2.rds.amazonaws.com:5432/zafin
     #url: jdbc:postgresql://localhost:5432/zafin
@@ -23,3 +25,12 @@ finnhub:
   api:
     key: d8qrd6pr01quatd8ohu0d8qrd6pr01quatd8ohug      
     url: https://finnhub.io/api/v1/quote    
+management:
+  endpoints:
+    web:
+      exposure:
+        include: startup    
+debug: false    
+logging:
+  file:
+    path: /home/ec2-user/log    
