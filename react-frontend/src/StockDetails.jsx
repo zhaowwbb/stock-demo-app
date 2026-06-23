@@ -6,9 +6,11 @@ export default function StockDetails() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';   
+
   useEffect(() => {
     setLoading(true);
-    fetch(`http://localhost:8080/api/stock/${symbol}`)
+    fetch(`${API_BASE}/api/stock/${symbol}`)
       .then((res) => res.json())
       .then((data) => {
         setHistory(data);
