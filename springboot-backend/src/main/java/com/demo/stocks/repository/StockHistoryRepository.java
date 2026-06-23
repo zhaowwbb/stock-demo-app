@@ -12,11 +12,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface StockHistoryRepository extends JpaRepository<StockHistory, StockHistoryId> {
     // Find historical data for a specific ticker symbol
     List<StockHistory> findBySymbolOrderByUpdatedDateDesc(String symbol);
+
+    @Query("SELECT MAX(s.updatedDate) FROM StockHistory s")
+    Optional<LocalDate> findMaxUpdatedDate();
 
     // Find all stock entries for a specific day
     List<StockHistory> findByUpdatedDate(LocalDate updatedDate);

@@ -171,12 +171,19 @@ public class StockController {
                 .executeUpdate();
 
         String insertAbsoluteSql = "INSERT INTO top_rec_absolute_increase (rank, updated_date, symbol, price_high, price_low, volume, price_increase_amt) "
+                + "WITH DeduplicatedStocks AS ("
+                + "  SELECT symbol, high, low, volume, "
+                + "         (close - open) as raw_amt, "
+                + "         ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY (close - open) DESC) as symbol_rn "
+                + "  FROM stock_price "
+                + "  WHERE OPEN > 0 and CLOSE > 0 "
+                + ") "
                 + "SELECT "
-                + "  ROW_NUMBER() OVER (ORDER BY (close - open) DESC) as rank, " // Changed to ROW_NUMBER()
-                + "  CURRENT_DATE, symbol, high, low, volume, (close - open) as price_increase_amt "
-                + "FROM stock_price "
-                + "WHERE OPEN > 0 and CLOSE > 0 "
-                + "ORDER BY price_increase_amt DESC "
+                + "  ROW_NUMBER() OVER (ORDER BY raw_amt DESC) as rank, " // Global rank 1-10
+                + "  CURRENT_DATE, symbol, high, low, volume, raw_amt as price_increase_amt "
+                + "FROM DeduplicatedStocks "
+                + "WHERE symbol_rn = 1 " // Eliminates duplicate symbols, keeping only the best price match
+                + "ORDER BY raw_amt DESC "
                 + "LIMIT 10 "
                 + "ON CONFLICT (rank, updated_date) "
                 + "DO UPDATE SET "
@@ -200,15 +207,20 @@ public class StockController {
         entityManager.createNativeQuery("DELETE FROM dm.top_rec_percentage_increase WHERE updated_date = CURRENT_DATE")
                 .executeUpdate();
         String insertPercentageSql = "INSERT INTO top_rec_percentage_increase (rank, updated_date, symbol, price_high, price_low, volume, price_increase_pct) "
+                + "WITH DeduplicatedStocks AS ("
+                + "  SELECT symbol, high, low, volume, "
+                + "         (CASE WHEN open = 0 THEN 0 ELSE ((close - open) / open) * 100 END) as raw_pct, "
+                + "         ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY (CASE WHEN open = 0 THEN 0 ELSE ((close - open) / open) * 100 END) DESC) as symbol_rn "
+                + "  FROM stock_price "
+                + "  WHERE OPEN > 0 and CLOSE > 0 "
+                + ") "
                 + "SELECT "
-                + "  ROW_NUMBER() OVER (ORDER BY (CASE WHEN open = 0 THEN 0 ELSE ((close - open) / open) * 100 END) DESC) as rank, " // Changed
-                                                                                                                                     // to
-                                                                                                                                     // ROW_NUMBER()
+                + "  ROW_NUMBER() OVER (ORDER BY raw_pct DESC) as rank, " // Global rank 1-10
                 + "  CURRENT_DATE, symbol, ROUND(high::numeric, 4), ROUND(low::numeric, 4), volume, "
-                + "  ROUND((CASE WHEN open = 0 THEN 0 ELSE ((close - open) / open) * 100 END)::numeric, 2) as price_increase_pct "
-                + "FROM stock_price "
-                + "WHERE OPEN > 0 and CLOSE > 0 "
-                + "ORDER BY price_increase_pct DESC "
+                + "  ROUND(raw_pct::numeric, 2) as price_increase_pct "
+                + "FROM DeduplicatedStocks "
+                + "WHERE symbol_rn = 1 " // Keeps only the top performing row for each unique symbol
+                + "ORDER BY raw_pct DESC "
                 + "LIMIT 10 "
                 + "ON CONFLICT (rank, updated_date) "
                 + "DO UPDATE SET "
@@ -304,9 +316,11 @@ public class StockController {
             symbolToCompanyMap.put(s.getSymbol(), s.getCompanyName());
         }
 
-        LocalDate updatedDate = Instant.ofEpochSecond(Instant.now().getEpochSecond())
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
+        LocalDate updatedDate = stockHistoryRepository.findMaxUpdatedDate().get();
+
+        // Instant.ofEpochSecond(Instant.now().getEpochSecond())
+        // .atZone(ZoneId.systemDefault())
+        // .toLocalDate();
 
         List<StockHistory> list = stockHistoryRepository.findByUpdatedDate(updatedDate);
         // List<Stock> list =
