@@ -171,14 +171,20 @@ public class StockController {
                 .executeUpdate();
 
         String insertAbsoluteSql = "INSERT INTO top_rec_absolute_increase (rank, updated_date, symbol, price_high, price_low, volume, price_increase_amt) "
-                +
-                "SELECT " +
-                "  DENSE_RANK() OVER (ORDER BY (close - open) DESC) as rank, " +
-                "  CURRENT_DATE, symbol, high, low, volume, (close - open) as price_increase_amt " +
-                "FROM stock_price " +
-                "WHERE    OPEN > 0 and CLOSE > 0 " +
-                "ORDER BY price_increase_amt DESC " +
-                "LIMIT 10";
+                + "SELECT "
+                + "  ROW_NUMBER() OVER (ORDER BY (close - open) DESC) as rank, " // Changed to ROW_NUMBER()
+                + "  CURRENT_DATE, symbol, high, low, volume, (close - open) as price_increase_amt "
+                + "FROM stock_price "
+                + "WHERE OPEN > 0 and CLOSE > 0 "
+                + "ORDER BY price_increase_amt DESC "
+                + "LIMIT 10 "
+                + "ON CONFLICT (rank, updated_date) "
+                + "DO UPDATE SET "
+                + "  symbol = EXCLUDED.symbol, "
+                + "  price_high = EXCLUDED.price_high, "
+                + "  price_low = EXCLUDED.price_low, "
+                + "  volume = EXCLUDED.volume, "
+                + "  price_increase_amt = EXCLUDED.price_increase_amt";
 
         // Execute batch insertion calculations
         int absInserted = entityManager.createNativeQuery(insertAbsoluteSql).executeUpdate();
@@ -194,17 +200,23 @@ public class StockController {
         entityManager.createNativeQuery("DELETE FROM dm.top_rec_percentage_increase WHERE updated_date = CURRENT_DATE")
                 .executeUpdate();
         String insertPercentageSql = "INSERT INTO top_rec_percentage_increase (rank, updated_date, symbol, price_high, price_low, volume, price_increase_pct) "
-                +
-                "SELECT " +
-                "  DENSE_RANK() OVER (ORDER BY (CASE WHEN open = 0 THEN 0 ELSE ((close - open) / open) * 100 END) DESC) as rank, "
-                +
-                "  CURRENT_DATE, symbol, ROUND(high::numeric, 4), ROUND(low::numeric, 4), volume, " +
-                "  ROUND((CASE WHEN open = 0 THEN 0 ELSE ((close - open) / open) * 100 END)::numeric, 2) as price_increase_pct "
-                +
-                "FROM stock_price " +
-                "WHERE    OPEN > 0 and CLOSE > 0 " +
-                "ORDER BY price_increase_pct DESC " +
-                "LIMIT 10";
+                + "SELECT "
+                + "  ROW_NUMBER() OVER (ORDER BY (CASE WHEN open = 0 THEN 0 ELSE ((close - open) / open) * 100 END) DESC) as rank, " // Changed
+                                                                                                                                     // to
+                                                                                                                                     // ROW_NUMBER()
+                + "  CURRENT_DATE, symbol, ROUND(high::numeric, 4), ROUND(low::numeric, 4), volume, "
+                + "  ROUND((CASE WHEN open = 0 THEN 0 ELSE ((close - open) / open) * 100 END)::numeric, 2) as price_increase_pct "
+                + "FROM stock_price "
+                + "WHERE OPEN > 0 and CLOSE > 0 "
+                + "ORDER BY price_increase_pct DESC "
+                + "LIMIT 10 "
+                + "ON CONFLICT (rank, updated_date) "
+                + "DO UPDATE SET "
+                + "  symbol = EXCLUDED.symbol, "
+                + "  price_high = EXCLUDED.price_high, "
+                + "  price_low = EXCLUDED.price_low, "
+                + "  volume = EXCLUDED.volume, "
+                + "  price_increase_pct = EXCLUDED.price_increase_pct";
 
         int pctInserted = entityManager.createNativeQuery(insertPercentageSql).executeUpdate();
 

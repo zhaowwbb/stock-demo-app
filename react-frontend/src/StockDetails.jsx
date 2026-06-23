@@ -10,7 +10,7 @@ export default function StockDetails() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${API_BASE}/api/stock/${symbol}`)
+    fetch(`${API_BASE_URL}/api/stock/${symbol}`)
       .then((res) => res.json())
       .then((data) => {
         setHistory(data);
