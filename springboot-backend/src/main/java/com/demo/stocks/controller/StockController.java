@@ -2,11 +2,15 @@ package com.demo.stocks.controller;
 
 import com.demo.stocks.StockDemoApplication;
 import com.demo.stocks.model.Stock;
+import com.demo.stocks.model.StockPrice;
+import com.demo.stocks.model.StockHistory;
 import com.demo.stocks.model.StockRanking;
 import com.demo.stocks.model.TopRecAbsoluteIncrease;
 import com.demo.stocks.model.TopRecPercentageIncrease;
+import com.demo.stocks.repository.StockHistoryRepository;
 import com.demo.stocks.repository.StockRankingRepository;
 import com.demo.stocks.repository.StockRepository;
+import com.demo.stocks.repository.StockPriceReposistory;
 import com.demo.stocks.repository.TopRecAbsoluteIncreaseRepository;
 import com.demo.stocks.repository.TopRecPercentageIncreaseRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,26 +29,32 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import org.springframework.transaction.annotation.Transactional;
+import com.demo.stocks.dto.StockHistoryDto;
 
+import org.springframework.transaction.annotation.Transactional;
 import java.io.InputStream;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 @Controller
 @CrossOrigin(origins = "*") // For development. Replace "*" with your production React URL later.
 @RequestMapping("/")
 public class StockController {
     // 1. Define the logger instance for this class
-    // private static final java.util.logging.Logger log = LoggerFactory.getLogger(StockController.class);
+    // private static final java.util.logging.Logger log =
+    // LoggerFactory.getLogger(StockController.class);
 
-    private static final Logger log =
-            LoggerFactory.getLogger(StockController.class);    
+    private static final Logger log = LoggerFactory.getLogger(StockController.class);
 
     private final StockRepository stockRepository;
     private final StockRankingRepository stockRankingRepository;
+    private final StockHistoryRepository stockHistoryRepository;
+    private final StockPriceReposistory stockPriceReposistory;
     private final S3Client s3Client;
     private final ObjectMapper objectMapper;
     private final StockPriceService stockPriceService;
@@ -62,12 +72,15 @@ public class StockController {
     private String bucketName;
 
     public StockController(StockRepository stockRepository, S3Client s3Client,
-            StockRankingRepository stockRankingRepository, StockPriceService stockPriceService) {
+            StockRankingRepository stockRankingRepository, StockPriceService stockPriceService,
+            StockHistoryRepository stockHistoryRepository, StockPriceReposistory stockPriceReposistory) {
         this.stockRepository = stockRepository;
         this.stockRankingRepository = stockRankingRepository;
         this.s3Client = s3Client;
         this.objectMapper = new ObjectMapper();
         this.stockPriceService = stockPriceService;
+        this.stockHistoryRepository = stockHistoryRepository;
+        this.stockPriceReposistory = stockPriceReposistory;
     }
 
     @GetMapping("/api/stocks/dbtop10")
@@ -97,18 +110,6 @@ public class StockController {
         }
     }
 
-    @GetMapping("/api/stocks/{symbol}")
-    @ResponseBody
-    public List<Stock> getStockDetails(@PathVariable String symbol) {
-        log.info("Fetching stock details for symbol: [{}]", symbol);
-        List<Stock> list = stockRepository.findBySymbolIgnoreCaseOrderByUpdatedTimeAsc(symbol);
-        long count = stockRepository.count();
-
-        log.info("Total Stock count: {}", count);
-        log.info("Fetching stock list: {}", list);
-        return list;
-    }
-
     @GetMapping
     public String viewTop10Page(Model model) {
         try {
@@ -123,13 +124,13 @@ public class StockController {
         return "top10";
     }
 
-    @GetMapping("/stocks/{symbol}")
-    public String viewStockHistory(@PathVariable String symbol, Model model) {
-        List<Stock> history = getStockDetails(symbol);
-        model.addAttribute("history", history);
-        // model.addAttribute("symbol", symbol);
-        return "stock-detail";
-    }
+    // @GetMapping("/stocks/{symbol}")
+    // public String viewStockHistory(@PathVariable String symbol, Model model) {
+    // List<Stock> history = getStockDetails(symbol);
+    // model.addAttribute("history", history);
+    // // model.addAttribute("symbol", symbol);
+    // return "stock-detail";
+    // }
 
     @GetMapping("/dashboard")
     public String getDashboard(Model model) {
@@ -281,4 +282,44 @@ public class StockController {
                 .body("Sync started for " + symbols.size() + " symbols. Processing batches of 50...");
     }
 
+    @GetMapping("/api/stocks/all-current")
+    @ResponseBody
+    public List<StockHistoryDto> getAllStockHistory() {
+        log.info("Fetching all stock History");
+        List<Stock> stockList = stockRepository.findAll();
+        Map<String, String> symbolToCompanyMap = new HashMap<>();
+        for (Stock s : stockList) {
+            symbolToCompanyMap.put(s.getSymbol(), s.getCompanyName());
+        }
+
+        LocalDate updatedDate = Instant.ofEpochSecond(Instant.now().getEpochSecond())
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+        List<StockHistory> list = stockHistoryRepository.findByUpdatedDate(updatedDate);
+        // List<Stock> list =
+        // stockRepository.findBySymbolIgnoreCaseOrderByUpdatedTimeAsc(symbol);
+        long count = list.size();
+        List<StockHistoryDto> result = new ArrayList<>();
+        for (StockHistory s : list) {
+            StockHistoryDto dto = new StockHistoryDto(s, symbolToCompanyMap.get(s.getSymbol()));
+            result.add(dto);
+        }
+
+        log.info("Total StockHistory count: {}", count);
+        // log.info("Fetching StockHistory list: {}", list);
+        return result;
+    }
+
+    @GetMapping("/api/stock/{symbol}")
+    @ResponseBody
+    public List<StockPrice> getStockDetails(@PathVariable String symbol) {
+        log.info("Fetching stock details for symbol: [{}]", symbol);
+        List<StockPrice> list = stockPriceReposistory.findBySymbolIgnoreCaseOrderByUpdatedDateAsc(symbol);
+        long count = list.size();
+
+        log.info("Total Stock count: {}", count);
+        log.info("Fetching stock list: {}", list);
+        return list;
+    }
 }

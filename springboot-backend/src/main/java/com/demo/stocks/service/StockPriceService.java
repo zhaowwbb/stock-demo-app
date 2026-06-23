@@ -3,14 +3,18 @@ package com.demo.stocks.service;
 import com.demo.stocks.StockDemoApplication;
 import com.demo.stocks.dto.FinnhubQuoteResponse;
 import com.demo.stocks.model.StockPrice;
+import com.demo.stocks.repository.StockHistoryRepository;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,11 +24,10 @@ import org.slf4j.LoggerFactory;
 @Service
 public class StockPriceService {
 
-        // private static final java.util.logging.Logger log =
-        //     LoggerFactory.getLogger(StockPriceService.class);
+    // private static final java.util.logging.Logger log =
+    // LoggerFactory.getLogger(StockPriceService.class);
 
-    private static final Logger log =
-            LoggerFactory.getLogger(StockPriceService.class);            
+    private static final Logger log = LoggerFactory.getLogger(StockPriceService.class);
 
     @Value("${finnhub.api.key}")
     private String apiKey;
@@ -34,9 +37,11 @@ public class StockPriceService {
 
     private final JdbcTemplate jdbcTemplate;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final StockHistoryRepository stockHistoryRepository;
 
-    public StockPriceService(JdbcTemplate jdbcTemplate) {
+    public StockPriceService(JdbcTemplate jdbcTemplate, StockHistoryRepository stockHistoryRepository) {
         this.jdbcTemplate = jdbcTemplate;
+        this.stockHistoryRepository = stockHistoryRepository;
     }
 
     public void fetchAndBatchSave(List<String> symbols) {
@@ -60,6 +65,20 @@ public class StockPriceService {
                             .atZone(ZoneId.systemDefault()).toLocalDateTime());
 
                     batchList.add(sp);
+
+                    LocalDate updatedDate = Instant.ofEpochSecond(response.timestamp)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate();
+
+                    // Execute high performance DB internal upsert statement
+                    stockHistoryRepository.upsertStockPrice(
+                            symbol.toUpperCase(),
+                            updatedDate,
+                            response.close, // current_price
+                            response.open, // open_price
+                            response.high, // high_price
+                            response.low, // low_price
+                            response.volume);
                 }
 
                 // 2. Write to DB when batch reaches 50 records
